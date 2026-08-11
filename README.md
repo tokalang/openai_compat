@@ -1,6 +1,6 @@
 # `official/openai_compat` v1
 
-This incubating package owns the transport-neutral request, response, and
+This standalone package owns the transport-neutral request, response, and
 streaming semantics of the `/v1/chat/completions` OpenAI-compatible profile.
 It builds request JSON from owned messages and tool definitions; decodes normal
 completion JSON; and interprets the `data` field of an already-framed
@@ -49,9 +49,9 @@ output, tool-call count, and tool-argument bytes. These limits are in addition
 to the lower SSE line/event/buffer limits.
 
 The package-local scope and compatibility matrix are in
-[`docs/openai_compat_v1.md`](docs/openai_compat_v1.md). The in-repository
-source and locked-local package gates pass; standalone extraction and public
-registry release remain later gates.
+[`docs/openai_compat_v1.md`](docs/openai_compat_v1.md). Source and locked-local
+package gates passed before extraction; standalone CI and public registry replay
+are recorded in the release gate below.
 
 `v0.1.0` is retained as a non-registry source snapshot: its archive did not
 use the required `toka publish` package layout. `0.1.1` is the first
@@ -62,7 +62,6 @@ and fresh-consumer evidence is listed in
 ## Qualification
 
 ```sh
-cd official/openai_compat
 python3 tests/qualify_package.py
 ```
 
