@@ -53,8 +53,10 @@ The package-local scope and compatibility matrix are in
 source and locked-local package gates pass; standalone extraction and public
 registry release remain later gates.
 
-The first standalone public release is `0.1.0`; its required immutable archive,
-registry, and fresh-consumer evidence is listed in
+`v0.1.0` is retained as a non-registry source snapshot: its archive did not
+use the required `toka publish` package layout. `0.1.1` is the first
+registry-eligible standalone release. Its required immutable archive, registry,
+and fresh-consumer evidence is listed in
 [`docs/release_0_1.md`](docs/release_0_1.md).
 
 ## Qualification
