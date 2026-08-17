@@ -125,7 +125,7 @@ fn main() -> i32 {
     if !assembled_content.unwrap().as_str().equals("hello") { return 46 }
     auto calls = turn.tool_calls()
     if calls.len() != 1:usize { return 47 }
-    auto call = calls.get(0:usize).clone()
+    auto call = calls.get_ref(0:usize).clone()
     if !call.id().as_str().equals("call-1") || !call.name().as_str().equals("weather") || !call.arguments().as_str().equals("{\"city\":\"Tokyo\"}") { return 48 }
     auto assembled_usage = turn.usage()
     if assembled_usage.is_none() { return 49 }
@@ -169,7 +169,7 @@ fn main() -> i32 {
             if finish.is_none() { return 52 }
             if !finish.unwrap().as_str().equals("tool_calls") { return 52 }
             auto calls = 'turn.tool_calls()
-            if calls.len() != 1:usize || !calls.get(0:usize).name().as_str().equals("weather") { return 53 }
+            if calls.len() != 1:usize || !calls.get_ref(0:usize).name().as_str().equals("weather") { return 53 }
             auto usage = 'turn.usage()
             if usage.is_none() { return 54 }
             if usage.unwrap().prompt_tokens() != 2:usize { return 54 }

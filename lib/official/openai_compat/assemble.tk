@@ -140,7 +140,7 @@ impl StreamAssembler {
         auto calls# = Vec<OpenAiToolCall>::new()
         auto index# = 0:usize
         loop index < self.tool_calls.len() {
-            auto state = self.tool_calls.get(index).clone()
+            auto state = self.tool_calls.get_ref(index).clone()
             if !state.has_id || !state.has_name {
                 return Result<OpenAiAssistantTurn, OpenAiCompatError>::Err(OpenAiCompatError::new("protocol", "OpenAI-compatible completed tool call is missing id or name"))
             }

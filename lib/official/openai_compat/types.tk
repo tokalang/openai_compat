@@ -26,7 +26,7 @@ fn clone_tool_calls(values: Vec<OpenAiToolCall>) -> Vec<OpenAiToolCall> {
     auto copied# = Vec<OpenAiToolCall>::new()
     auto index# = 0:usize
     loop index < values.len() {
-        copied#.push(cede values.get(index).clone())
+        copied#.push(cede values.get_ref(index).clone())
         index += 1:usize
     }
     return copied

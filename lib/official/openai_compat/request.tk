@@ -151,7 +151,7 @@ impl ChatRequest {
         auto index# = 0:usize
         loop index < self.messages.len() {
             if index > 0:usize { out#.push_char(',') }
-            append_message(cede self.messages.get(index).clone(), out)
+            append_message(cede self.messages.get_ref(index).clone(), out)
             index += 1:usize
         }
         out#.push_str("]")
@@ -160,7 +160,7 @@ impl ChatRequest {
             index = 0:usize
             loop index < self.tools.len() {
                 if index > 0:usize { out#.push_char(',') }
-                append_tool(cede self.tools.get(index).clone(), out)
+                append_tool(cede self.tools.get_ref(index).clone(), out)
                 index += 1:usize
             }
             out#.push_str("]")

@@ -1,10 +1,10 @@
 pub const PACKAGE = (
     name = "openai_compat",
     identity = "official/openai_compat",
-    version = "0.1.1",
+    version = "0.1.2",
     kind = "library",
     license = "Apache-2.0",
-    compiler = "1.0.0-rc.1",
+    compiler = "1.0.0-rc.5",
     entry_modules = ("lib/official/openai_compat.tk"),
     targets = ("macos", "linux"),
     dependencies = (),
