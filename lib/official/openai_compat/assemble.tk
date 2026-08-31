@@ -73,7 +73,7 @@ impl StreamAssembler {
         if index == self.tool_calls.len() {
             self.tool_calls#.push(cede ToolCallState::new())
         }
-        auto *state# = self.tool_calls.get_ref(index)
+        auto &state# = self.tool_calls#.borrow_mut(index)
         auto id = delta.id()
         match id {
             auto Option<string>::Some(&value) => {
@@ -140,12 +140,12 @@ impl StreamAssembler {
         auto calls# = Vec<OpenAiToolCall>::new()
         auto index# = 0:usize
         loop index < self.tool_calls.len() {
-            auto state = self.tool_calls.get_ref(index).clone()
+            auto state = self.tool_calls.borrow(index).clone()
             if !state.has_id || !state.has_name {
                 return Result<OpenAiAssistantTurn, OpenAiCompatError>::Err(OpenAiCompatError::new("protocol", "OpenAI-compatible completed tool call is missing id or name"))
             }
             auto call = OpenAiToolCall::new(state.id.as_str(), state.name.as_str(), state.arguments.as_str())
-            if call.is_err() { return Result<OpenAiAssistantTurn, OpenAiCompatError>::Err(call.unwrap_err()) }
+            if call.is_err() { return Result<OpenAiAssistantTurn, OpenAiCompatError>::Err(cede call.unwrap_err()) }
             calls#.push(cede call.unwrap())
             index += 1:usize
         }
