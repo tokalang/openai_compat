@@ -29,7 +29,7 @@ fn clone_tool_calls(values: Vec<OpenAiToolCall>) -> Vec<OpenAiToolCall> {
         copied#.push(cede values.borrow(index).clone())
         index += 1:usize
     }
-    return copied
+    return cede copied
 }
 
 impl OpenAiCompatError@Encap { fn drop(self#) {} }

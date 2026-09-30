@@ -33,7 +33,7 @@ fn main() -> i32 {
     auto text_events = text.unwrap()
     if text_events.len() != 1:usize { return 3 }
     match cede text_events#.pop().unwrap() {
-        auto OpenAiStreamEvent::TextDelta('value) => { if !'value.as_str().equals("hello") { return 4 } }
+        auto OpenAiStreamEvent::TextDelta(value) => { if !value.as_str().equals("hello") { return 4 } }
         _ => return 5
     }
 
@@ -43,11 +43,11 @@ fn main() -> i32 {
     auto role_events# = role.unwrap()
     if role_events.len() != 2:usize { return 27 }
     match cede role_events#.pop().unwrap() {
-        auto OpenAiStreamEvent::RefusalDelta('value) => { if !'value.as_str().equals("cannot help") { return 28 } }
+        auto OpenAiStreamEvent::RefusalDelta(value) => { if !value.as_str().equals("cannot help") { return 28 } }
         _ => return 29
     }
     match cede role_events#.pop().unwrap() {
-        auto OpenAiStreamEvent::RoleDelta('value) => { if !'value.as_str().equals("assistant") { return 30 } }
+        auto OpenAiStreamEvent::RoleDelta(value) => { if !value.as_str().equals("assistant") { return 30 } }
         _ => return 31
     }
 
@@ -56,7 +56,7 @@ fn main() -> i32 {
     if usage.is_err() { return 32 }
     auto usage_events# = usage.unwrap()
     match cede usage_events#.pop().unwrap() {
-        auto OpenAiStreamEvent::Usage('value) => { if 'value.total_tokens() != 8:usize { return 33 } }
+        auto OpenAiStreamEvent::Usage(value) => { if value.total_tokens() != 8:usize { return 33 } }
         _ => return 34
     }
     auto second_choice_limits = OpenAiCompatLimits::new(4096:usize, 4:usize).unwrap()
@@ -70,7 +70,7 @@ fn main() -> i32 {
     auto tool_events# = tool.unwrap()
     if tool_events.len() != 1:usize { return 7 }
     match cede tool_events#.pop().unwrap() {
-        auto OpenAiStreamEvent::ToolCallDelta('delta) => { if 'delta.index() != 0:i32 { return 8 } }
+        auto OpenAiStreamEvent::ToolCallDelta(delta) => { if delta.index() != 0:i32 { return 8 } }
         _ => return 9
     }
     auto malformed_tool_limits = OpenAiCompatLimits::new(4096:usize, 4:usize).unwrap()
@@ -83,7 +83,7 @@ fn main() -> i32 {
     if done.is_err() { return 10 }
     auto done_events# = done.unwrap()
     match cede done_events#.pop().unwrap() {
-        auto OpenAiStreamEvent::Completed('reason) => { if 'reason.is_some() { return 12 } }
+        auto OpenAiStreamEvent::Completed(reason) => { if reason.is_some() { return 12 } }
         _ => return 13
     }
 
@@ -95,27 +95,33 @@ fn main() -> i32 {
     if assembly_limits.is_err() { return 36 }
     auto assembler# = StreamAssembler::new(cede assembly_limits.unwrap())
     auto role_event# = OpenAiStreamEvent::RoleDelta(string::from("assistant"))
-    if assembler#.push(role_event).is_err() { return 37 }
+    if assembler#.push(role_event#).is_err() { return 37 }
     auto first_text_event# = OpenAiStreamEvent::TextDelta(string::from("hel"))
-    if assembler#.push(first_text_event).is_err() { return 38 }
+    if assembler#.push(first_text_event#).is_err() { return 38 }
     auto second_text_event# = OpenAiStreamEvent::TextDelta(string::from("lo"))
-    if assembler#.push(second_text_event).is_err() { return 39 }
+    if assembler#.push(second_text_event#).is_err() { return 39 }
     {
-        auto first_call = OpenAiToolCallDelta::new(0:i32, Option<string>::Some(string::from("call-1")), Option<string>::Some(string::from("weather")), Option<string>::Some(string::from("{\"city\":")))
+        auto call_id = Option<string>::Some(string::from("call-1"))
+        auto call_name = Option<string>::Some(string::from("weather"))
+        auto call_args = Option<string>::Some(string::from("{\"city\":"))
+        auto first_call = OpenAiToolCallDelta::new(0:i32, cede call_id, cede call_name, cede call_args)
         auto first_event# = OpenAiStreamEvent::ToolCallDelta(cede first_call)
-        if assembler#.push(first_event).is_err() { return 40 }
+        if assembler#.push(first_event#).is_err() { return 40 }
     }
     {
-        auto second_call = OpenAiToolCallDelta::new(0:i32, Option<string>::None, Option<string>::None, Option<string>::Some(string::from("\"Tokyo\"}")))
+        auto none_id = Option<string>::None
+        auto none_name = Option<string>::None
+        auto second_args = Option<string>::Some(string::from("\"Tokyo\"}"))
+        auto second_call = OpenAiToolCallDelta::new(0:i32, cede none_id, cede none_name, cede second_args)
         auto second_event# = OpenAiStreamEvent::ToolCallDelta(cede second_call)
-        if assembler#.push(second_event).is_err() { return 41 }
+        if assembler#.push(second_event#).is_err() { return 41 }
     }
     auto usage_value = OpenAiUsage::new(2:usize, 3:usize, 5:usize)
     if usage_value.is_err() { return 42 }
     auto usage_event# = OpenAiStreamEvent::Usage(usage_value.unwrap())
-    if assembler#.push(usage_event).is_err() { return 43 }
+    if assembler#.push(usage_event#).is_err() { return 43 }
     auto completed_event# = OpenAiStreamEvent::Completed(Option<string>::Some(string::from("tool_calls")))
-    if assembler#.push(completed_event).is_err() { return 44 }
+    if assembler#.push(completed_event#).is_err() { return 44 }
     {
     auto assembled = assembler#.finish()
     if assembled.is_err() { return 45 }
@@ -137,22 +143,31 @@ fn main() -> i32 {
     {
         auto output_limited# = StreamAssembler::new(cede OpenAiAssemblyLimits::new(3:usize, 1:usize, 8:usize).unwrap())
         auto long_text# = OpenAiStreamEvent::TextDelta(string::from("four"))
-        if output_limited#.push(long_text).is_ok() { return 62 }
+        if output_limited#.push(long_text#).is_ok() { return 62 }
     }
     {
         auto argument_limited# = StreamAssembler::new(cede OpenAiAssemblyLimits::new(64:usize, 1:usize, 3:usize).unwrap())
-        auto oversized_delta = OpenAiToolCallDelta::new(0:i32, Option<string>::Some(string::from("call-2")), Option<string>::Some(string::from("weather")), Option<string>::Some(string::from("four")))
+        auto over_id = Option<string>::Some(string::from("call-2"))
+        auto over_name = Option<string>::Some(string::from("weather"))
+        auto over_args = Option<string>::Some(string::from("four"))
+        auto oversized_delta = OpenAiToolCallDelta::new(0:i32, cede over_id, cede over_name, cede over_args)
         auto oversized_event# = OpenAiStreamEvent::ToolCallDelta(cede oversized_delta)
-        if argument_limited#.push(oversized_event).is_ok() { return 63 }
+        if argument_limited#.push(oversized_event#).is_ok() { return 63 }
     }
     {
         auto conflict_limited# = StreamAssembler::new(cede OpenAiAssemblyLimits::new(64:usize, 1:usize, 8:usize).unwrap())
-        auto first_delta = OpenAiToolCallDelta::new(0:i32, Option<string>::Some(string::from("call-3")), Option<string>::None, Option<string>::None)
+        auto first_id = Option<string>::Some(string::from("call-3"))
+        auto none_name1 = Option<string>::None
+        auto none_args1 = Option<string>::None
+        auto first_delta = OpenAiToolCallDelta::new(0:i32, cede first_id, cede none_name1, cede none_args1)
         auto first_delta_event# = OpenAiStreamEvent::ToolCallDelta(cede first_delta)
-        if conflict_limited#.push(first_delta_event).is_err() { return 64 }
-        auto conflicting_delta = OpenAiToolCallDelta::new(0:i32, Option<string>::Some(string::from("call-4")), Option<string>::None, Option<string>::None)
+        if conflict_limited#.push(first_delta_event#).is_err() { return 64 }
+        auto conf_id = Option<string>::Some(string::from("call-4"))
+        auto none_name2 = Option<string>::None
+        auto none_args2 = Option<string>::None
+        auto conflicting_delta = OpenAiToolCallDelta::new(0:i32, cede conf_id, cede none_name2, cede none_args2)
         auto conflicting_event# = OpenAiStreamEvent::ToolCallDelta(cede conflicting_delta)
-        if conflict_limited#.push(conflicting_event).is_ok() { return 65 }
+        if conflict_limited#.push(conflicting_event#).is_ok() { return 65 }
     }
 
     {
@@ -161,16 +176,16 @@ fn main() -> i32 {
     if response.is_err() { return 50 }
     auto completion = response.unwrap()
     match cede completion {
-        auto OpenAiCompletion::AssistantTurn('turn) => {
-            auto content = 'turn.content()
+        auto OpenAiCompletion::AssistantTurn(turn) => {
+            auto content = turn.content()
             if content.is_none() { return 51 }
             if !content.unwrap().as_str().equals("clear skies") { return 51 }
-            auto finish = 'turn.finish_reason()
+            auto finish = turn.finish_reason()
             if finish.is_none() { return 52 }
             if !finish.unwrap().as_str().equals("tool_calls") { return 52 }
-            auto calls = 'turn.tool_calls()
+            auto calls = turn.tool_calls()
             if calls.len() != 1:usize || !calls.borrow(0:usize).name().as_str().equals("weather") { return 53 }
-            auto usage = 'turn.usage()
+            auto usage = turn.usage()
             if usage.is_none() { return 54 }
             if usage.unwrap().prompt_tokens() != 2:usize { return 54 }
         }
@@ -180,7 +195,7 @@ fn main() -> i32 {
     if error_response.is_err() { return 56 }
     auto provider_error = error_response.unwrap()
     match cede provider_error {
-        auto OpenAiCompletion::ApiError('failure) => { if !'failure.message().as_str().equals("denied") { return 57 } }
+        auto OpenAiCompletion::ApiError(failure) => { if !failure.message().as_str().equals("denied") { return 57 } }
         _ => return 58
     }
     if decode_completion_json("{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":1},\"finish_reason\":\"stop\"}]}", OpenAiCompatLimits::new(4096:usize, 2:usize).unwrap()).is_ok() { return 59 }

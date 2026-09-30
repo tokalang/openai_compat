@@ -4,7 +4,7 @@ import core/option::{Option}
 import core/result::{Result}
 import official/openai_compat/types::{OpenAiCompatError}
 import std/vec::{Vec}
-import stdx/serde/json::{JsonNode, json_skip_whitespace, write_escaped_json_string}
+import stdx/serde/json::{parse_document, write_escaped_json_string}
 
 pub shape ChatMessage (role: string, content: string, tool_call_id: Option<string>)
 pub shape ChatTool (name: string, description: Option<string>, parameters_json: string)
@@ -24,26 +24,22 @@ fn valid_tool_name(value: str) -> bool {
 }
 
 fn validate_schema(schema: str) -> bool {
-    auto root# = JsonNode::NullNode(0)
-    auto parsed = root#.parse_json(schema)
+    auto parsed = parse_document(schema)
     if parsed.is_err() { return false }
-    if json_skip_whitespace(parsed.unwrap()).len() != 0:usize { return false }
-    match cede root {
-        auto JsonNode::ObjectNode(_) => return true
-        _ => return false
-    }
+    auto doc = parsed.unwrap()
+    return doc.kind(1:usize) == 5
 }
 
 fn append_message(cede value: ChatMessage, out#: string) {
     auto message = cede value
     out#.push_str("{\"role\":")
-    write_escaped_json_string(message.role.as_str(), out)
+    write_escaped_json_string(message.role.as_str(), out#)
     out#.push_str(",\"content\":")
-    write_escaped_json_string(message.content.as_str(), out)
+    write_escaped_json_string(message.content.as_str(), out#)
     match cede message.tool_call_id() {
-        auto Option<string>::Some('id) => {
+        auto Option<string>::Some(id) => {
             out#.push_str(",\"tool_call_id\":")
-            write_escaped_json_string('id.as_str(), out)
+            write_escaped_json_string(id.as_str(), out#)
         }
         _ => {}
     }
@@ -53,8 +49,8 @@ fn append_message(cede value: ChatMessage, out#: string) {
 fn append_tool(cede value: ChatTool, out#: string) {
     auto tool = cede value
     out#.push_str("{\"type\":\"function\",\"function\":{\"name\":")
-    write_escaped_json_string(tool.name.as_str(), out)
-    tool.append_description(out)
+    write_escaped_json_string(tool.name.as_str(), out#)
+    tool.append_description(out#)
     out#.push_str(",\"parameters\":")
     out#.push_str(tool.parameters_json.as_str())
     out#.push_str("}}")
@@ -106,7 +102,7 @@ impl ChatTool {
         match self.description {
             auto Option<string>::Some(&description) => {
                 out#.push_str(",\"description\":")
-                write_escaped_json_string(description.as_str(), out)
+                write_escaped_json_string(description.as_str(), out#)
             }
             _ => {}
         }
@@ -143,7 +139,7 @@ impl ChatRequest {
     pub fn to_json(self) -> Result<string, OpenAiCompatError> {
         if self.messages.len() == 0:usize { return Result<string, OpenAiCompatError>::Err(OpenAiCompatError::new("input", "chat request needs at least one message")) }
         auto out# = string::from("{\"model\":")
-        write_escaped_json_string(self.model.as_str(), out)
+        write_escaped_json_string(self.model.as_str(), out#)
         out#.push_str(",\"stream\":")
         if self.stream { out#.push_str("true") } else { out#.push_str("false") }
         if self.include_usage { out#.push_str(",\"stream_options\":{\"include_usage\":true}") }
@@ -151,7 +147,7 @@ impl ChatRequest {
         auto index# = 0:usize
         loop index < self.messages.len() {
             if index > 0:usize { out#.push_char(',') }
-            append_message(cede self.messages.borrow(index).clone(), out)
+            append_message(cede self.messages.borrow(index).clone(), out#)
             index += 1:usize
         }
         out#.push_str("]")
@@ -160,7 +156,7 @@ impl ChatRequest {
             index = 0:usize
             loop index < self.tools.len() {
                 if index > 0:usize { out#.push_char(',') }
-                append_tool(cede self.tools.borrow(index).clone(), out)
+                append_tool(cede self.tools.borrow(index).clone(), out#)
                 index += 1:usize
             }
             out#.push_str("]")
