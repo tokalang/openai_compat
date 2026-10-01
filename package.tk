@@ -1,7 +1,7 @@
 pub const PACKAGE = (
     name = "openai_compat",
     identity = "official/openai_compat",
-    version = "0.1.2",
+    version = "0.1.3",
     kind = "library",
     license = "Apache-2.0",
     compiler = "0.10.0",
